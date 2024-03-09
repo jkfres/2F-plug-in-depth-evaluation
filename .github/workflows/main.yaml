@@ -1,0 +1,62 @@
+name: Build and release
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+     - 'v[0-9]+.[0-9]+.[0-9]+.[0-9]'
+
+jobs:
+  build:
+    name: Build exe
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['windows-latest']
+    steps:
+    - uses: actions/checkout@v3
+    - name: Remove 'v' prefix
+      id: remove_prefix
+      run: |
+        $tag = "${{ github.ref_name }}"
+        $modifiedTag = $tag -replace '^v', ''
+        echo "::set-output name=tag_name::$modifiedTag"
+
+    - name: Display modified tag name
+      run: |
+        echo "Modified tag name: ${{ steps.remove_prefix.outputs.tag_name }}"
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - run: pip install pyinstaller setuptools wheel Pillow
+    - run: pip install -r src/requirements.txt
+    - run: create-version-file src/metadata.yml --outfile file_version_info.txt --version ${{ steps.remove_prefix.outputs.tag_name }}
+    - run: pyinstaller --noconfirm --onefile --windowed --icon "src/files/icon.ico" --name "2F plug in depth evaluation" --add-data "src/files;files/" --version-file="file_version_info.txt" --splash "resources/splash.png"  "src/app.py"
+    - name: Upload exe
+      uses: actions/upload-artifact@v3
+      with:
+        name: 2F plug in depth evaluation
+        path: dist/*
+
+  release:
+    if: startsWith(github.event.ref, 'refs/tags/v')
+    needs: build
+    name: Create release with assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download
+        uses: actions/download-artifact@v3
+        with:
+          name: "2F plug in depth evaluation"
+          path: dist
+      - run: zip -j ${{ github.event.repository.name }}.zip dist/*
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          generateReleaseNotes: true
+          artifacts: ${{ github.event.repository.name }}.zip
