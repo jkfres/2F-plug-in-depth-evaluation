@@ -34,7 +34,7 @@ jobs:
     - run: pip install pyinstaller setuptools wheel Pillow
     - run: pip install -r src/requirements.txt
     - run: create-version-file src/metadata.yml --outfile file_version_info.txt --version ${{ steps.remove_prefix.outputs.tag_name }}
-    - run: pyinstaller --noconfirm --onefile --windowed --icon "src/files/icon.ico" --name "2F plug in depth evaluation" --add-data "src/files;files/" --version-file="file_version_info.txt" --splash "resources/splash.png"  "src/app.py"
+    - run: pyinstaller --noconfirm --windowed --icon "src/files/icon.ico" --name "2F plug in depth evaluation" --add-data "src/files;files/" --version-file="file_version_info.txt" --splash "resources/splash.png"  "src/app.py"
     - name: Upload exe
       uses: actions/upload-artifact@v3
       with:
