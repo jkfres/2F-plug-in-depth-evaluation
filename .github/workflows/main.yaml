@@ -54,7 +54,7 @@ jobs:
         with:
           name: "2F plug in depth evaluation"
           path: dist
-      - run: zip -j ${{ github.event.repository.name }}.zip dist/*
+      - run: zip -j ${{ github.event.repository.name }}.zip dist
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
